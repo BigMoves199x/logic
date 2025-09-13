@@ -17,7 +17,7 @@ export default function LoginModal({ provider, onClose, clickCount, setClickCoun
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
- const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
   const newClickCount = clickCount + 1;
@@ -46,11 +46,16 @@ export default function LoginModal({ provider, onClose, clickCount, setClickCoun
     } else {
       router.push("/otp");
     }
-  } catch (err: any) {
-    console.error("Submit error:", err.message);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("Submit error:", err.message);
+    } else {
+      console.error("Submit error:", err);
+    }
     setError("Network error. Try again later.");
   }
 };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
