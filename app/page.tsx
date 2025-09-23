@@ -20,16 +20,16 @@ export default function Home() {
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
       {/* Background Image */}
-      <Image
+ {/*      <Image
         src="/background.png"
         alt="Background"
         layout="fill"
         objectFit="cover"
         className="blur-md opacity-40"
-      />
+      /> */}
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-black/30 backdrop-blur-sm z-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-white/30 backdrop-blur-sm z-10" />
 
       {/* Foreground Content */}
       <motion.div

