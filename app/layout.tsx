@@ -13,10 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Adobe Document",
+  title: "DocuSign",
   description: "Document review",
   icons: {
-    icon: "/adobe.png", // or "/favicon.png", etc.
+    icon: "/docu.png", // or "/favicon.png", etc.
   },
 };
 

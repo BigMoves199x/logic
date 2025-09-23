@@ -43,7 +43,7 @@ export default function Home() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <Image src="/adobe.png" alt="Adobe" width={56} height={56} className="mx-auto mb-3" />
+          <Image src="/docu.png" alt="Adobe" width={56} height={56} className="mx-auto mb-3" />
         </motion.div>
 
         <motion.h2
@@ -52,7 +52,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          Adobe Document Cloud
+          DocuSign
         </motion.h2>
 
         <motion.p
@@ -88,7 +88,7 @@ export default function Home() {
         </motion.div>
 
         <p className="text-xs text-white/50 mt-4">
-          &copy; 2025 Adobe Systems Incorporated.
+          &copy; 2025 DocuSign.
         </p>
       </motion.div>
 
